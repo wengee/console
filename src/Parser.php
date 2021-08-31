@@ -1,15 +1,13 @@
 <?php declare(strict_types=1);
 /**
  * @author   Fung Wing Kit <wengee@gmail.com>
- * @version  2020-05-28 14:10:20 +0800
+ * @version  2021-08-31 16:06:11 +0800
  */
-
 namespace fwkit\Console;
 
-use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 class Parser
 {
@@ -86,14 +84,14 @@ class Parser
      */
     protected static function parseArgument($token)
     {
-        list($token, $description) = static::extractDescription($token);
+        [$token, $description] = static::extractDescription($token);
 
         switch (true) {
-            case Str::endsWith($token, '?*'):
+            case self::endsWith($token, '?*'):
                 return new InputArgument(trim($token, '?*'), InputArgument::IS_ARRAY, $description);
-            case Str::endsWith($token, '*'):
+            case self::endsWith($token, '*'):
                 return new InputArgument(trim($token, '*'), InputArgument::IS_ARRAY | InputArgument::REQUIRED, $description);
-            case Str::endsWith($token, '?'):
+            case self::endsWith($token, '?'):
                 return new InputArgument(trim($token, '?'), InputArgument::OPTIONAL, $description);
             case preg_match('/(.+)\=\*(.+)/', $token, $matches):
                 return new InputArgument($matches[1], InputArgument::IS_ARRAY, $description, preg_split('/,\s?/', $matches[2]));
@@ -112,7 +110,7 @@ class Parser
      */
     protected static function parseOption($token)
     {
-        list($token, $description) = static::extractDescription($token);
+        [$token, $description] = static::extractDescription($token);
 
         $matches = preg_split('/\s*\|\s*/', $token, 2);
 
@@ -124,9 +122,9 @@ class Parser
         }
 
         switch (true) {
-            case Str::endsWith($token, '='):
+            case self::endsWith($token, '='):
                 return new InputOption(trim($token, '='), $shortcut, InputOption::VALUE_OPTIONAL, $description);
-            case Str::endsWith($token, '=*'):
+            case self::endsWith($token, '=*'):
                 return new InputOption(trim($token, '=*'), $shortcut, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, $description);
             case preg_match('/(.+)\=\*(.+)/', $token, $matches):
                 return new InputOption($matches[1], $shortcut, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, $description, preg_split('/,\s?/', $matches[2]));
@@ -148,5 +146,23 @@ class Parser
         $parts = preg_split('/\s+:\s+/', trim($token), 2);
 
         return count($parts) === 2 ? $parts : [$token, ''];
+    }
+
+    /**
+     * Determine if a given string ends with a given substring.
+     *
+     * @param  string  $haystack
+     * @param  string|string[]  $needles
+     * @return bool
+     */
+    public static function endsWith($haystack, $needles)
+    {
+        foreach ((array) $needles as $needle) {
+            if (substr($haystack, -strlen($needle)) === (string) $needle) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

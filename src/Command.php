@@ -1,14 +1,11 @@
 <?php declare(strict_types=1);
 /**
  * @author   Fung Wing Kit <wengee@gmail.com>
- * @version  2020-05-28 14:10:16 +0800
+ * @version  2021-08-31 16:04:33 +0800
  */
-
 namespace fwkit\Console;
 
 use Exception;
-use Illuminate\Support\Str;
-use Illuminate\Support\Traits\Macroable;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
@@ -20,8 +17,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 abstract class Command extends SymfonyCommand
 {
-    use Macroable;
-
     protected $input;
 
     protected $output;
@@ -186,7 +181,7 @@ abstract class Command extends SymfonyCommand
 
     public function alert(string $string): void
     {
-        $length = Str::length(strip_tags($string)) + 12;
+        $length = mb_strlen(strip_tags($string)) + 12;
 
         $this->comment(str_repeat('*', $length));
         $this->comment('*     '.$string.'     *');
@@ -207,7 +202,7 @@ abstract class Command extends SymfonyCommand
 
     protected function configureUsingFluentDefinition(): void
     {
-        list($name, $arguments, $options) = Parser::parse($this->signature);
+        [$name, $arguments, $options] = Parser::parse($this->signature);
 
         parent::__construct($this->name = $name);
         $this->getDefinition()->addArguments($arguments);
@@ -240,7 +235,7 @@ abstract class Command extends SymfonyCommand
         try {
             $this->handle();
         } catch (Exception $e) {
-            $output->error($e->getMessage());
+            $this->error($e->getMessage());
             return 255;
         }
 
